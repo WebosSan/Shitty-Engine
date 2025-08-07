@@ -6,6 +6,7 @@ import flixel.FlxSprite;
 import flixel.math.FlxMath;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
+import game.objects.character.CharacterIcon;
 import game.objects.ui.elements.Button;
 import game.objects.ui.elements.Dropdown;
 import game.objects.ui.elements.Slider;
@@ -36,6 +37,9 @@ class ChartEditor extends FunkinState
 	private var playerGrid:FlxSprite;
 	private var enemyGrid:FlxSprite;
 	private var strumLine:FlxSprite;
+
+	private var enemyIcon:CharacterIcon;
+	private var playerIcon:CharacterIcon;
 
 	private var _defaultColor:FlxColor = 0xFF151619;
 	private var _bgColor:FlxColor = 0xFF1E1F22;
@@ -91,6 +95,20 @@ class ChartEditor extends FunkinState
 		add(playerGrid);
 		add(eventGrid);
 
+		enemyIcon = new CharacterIcon(enemyGrid.getGraphicMidpoint().x, enemyGrid.y, 'dad');
+		enemyIcon.scale.set(0.4, 0.4);
+		enemyIcon.updateHitbox();
+		enemyIcon.x -= enemyIcon.width / 2;
+		enemyIcon.y -= enemyIcon.height;
+		add(enemyIcon);
+
+		playerIcon = new CharacterIcon(playerGrid.getGraphicMidpoint().x, playerGrid.y, 'bf');
+		playerIcon.scale.set(0.4, 0.4);
+		playerIcon.updateHitbox();
+		playerIcon.x -= playerIcon.width / 2;
+		playerIcon.y -= playerIcon.height;
+		add(playerIcon);
+
 		strumLine = new FlxSprite(enemyGrid.x - 10, enemyGrid.y).makeGraphic(Std.int(eventGrid.x + eventGrid.width - enemyGrid.x + 20), 10, _defaultColor);
 		add(strumLine);
 
@@ -129,7 +147,7 @@ class ChartEditor extends FunkinState
 		editDropdown.cameras = [camHud];
 		add(editDropdown);
 
-		topBar = new TopBar(_defaultColor, ["File", "Edit", "View", "Test"]);
+		topBar = new TopBar(_defaultColor, ["File", "Edit", "Metadata", "Test"]);
 		topBar.darknessFactor = 0.2;
 		topBar.onClick = topBarCommands;
 		topBar.cameras = [camHud];

@@ -223,7 +223,7 @@ class ChartEditor extends FunkinState
 		else if (FlxG.mouse.overlaps(eventGrid))
 			currentGrid = eventGrid;
 
-		var note:Note = new Note(lane, getStrumFromY(y, currentGrid.y), Conductor.stepTime, _gridSize);
+		var note:Note = new Note(lane, getStrumFromY(y, currentGrid.y), 0, _gridSize);
 		note.setPosition(x, y);
 		add(note);
 	}

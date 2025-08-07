@@ -22,14 +22,22 @@ class Note extends FlxSprite
 	public var duration:Float;
 	public var strum:Float;
 
+	private var _ogDuration:Float;
+
+	private var _targetSize:Float;
+
 	public function new(lane:Int, strum:Float, ?duration:Float = 0, ?targetSize:Int)
 	{
 		super();
+
 		this.strum = strum;
 		this.duration = duration;
+		_ogDuration = this.duration;
+		
 		frames = Paths.sparrow('ui/notes/NOTE_assets');
 		animation.addByPrefix("idle", noteAnimations[lane][0]);
 		targetSize = (targetSize == null ? Std.int(width * 0.5) : targetSize);
+		_targetSize = targetSize;
 		setGraphicSize(Std.int(targetSize));
 		animation.play("idle");
 		updateHitbox();
@@ -59,7 +67,7 @@ class Note extends FlxSprite
 
 		if (duration > 0)
 		{
-			body.scale.y = (duration / Conductor.stepTime) * Settings.currentSpeed;
+			body.setGraphicSize(body.width, _targetSize * (duration / _ogDuration) * Settings.currentSpeed);
 			body.updateHitbox();
 			body.setPosition(x + (width / 2 - body.width / 2), y + height);
 

@@ -4,6 +4,7 @@ import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;
+import flixel.input.mouse.FlxMouse;
 import flixel.math.FlxMath;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
@@ -54,6 +55,8 @@ class ChartEditor extends FunkinState
 	private var _gridSize:Int = 40;
 
 	private var _notes:FlxTypedGroup<Note>;
+
+	private var mouseFollower:FlxSprite;
 
 	public function new(p:PlayStateData)
 	{
@@ -129,6 +132,10 @@ class ChartEditor extends FunkinState
 		playerIcon.y -= playerIcon.height;
 		add(playerIcon);
 
+		mouseFollower = new FlxSprite();
+		mouseFollower.makeGraphic(_gridSize, _gridSize, 0x8F959595);
+		add(mouseFollower);
+
 		strumLine = new FlxSprite(enemyGrid.x - 10, enemyGrid.y).makeGraphic(Std.int(eventGrid.x + eventGrid.width - enemyGrid.x + 20), 10, _defaultColor);
 		add(strumLine);
 
@@ -153,6 +160,72 @@ class ChartEditor extends FunkinState
 		infoText.text = 'Song Position: ${FlxMath.roundDecimal(Conductor.time / 1000, 1)}\nCurrent Step: ${Conductor.currentStep} | Current Beat: ${Conductor.currentBeat}';
 		songPosition.value = Conductor.time / Conductor.length;
 		pauseButton.setText(FlxG.sound.music.playing ? "||" : ">");
+		updateMouseFollower();
+		noteLogic();
+	}
+
+	function updateMouseFollower()
+	{
+		var mouse:FlxMouse = FlxG.mouse;
+		var mouseX:Float = mouse.x;
+		var mouseY:Float = mouse.y;
+
+		if (mouse.overlaps(enemyGrid) || mouse.overlaps(playerGrid) || mouse.overlaps(eventGrid))
+		{
+			var currentGrid:FlxSprite = null;
+			if (mouse.overlaps(enemyGrid))
+				currentGrid = enemyGrid;
+			else if (mouse.overlaps(playerGrid))
+				currentGrid = playerGrid;
+			else if (mouse.overlaps(eventGrid))
+				currentGrid = eventGrid;
+
+			if (currentGrid != null)
+			{
+				var relX = mouseX - currentGrid.x;
+				var relY = mouseY - currentGrid.y;
+
+				var gridX = Math.floor(relX / _gridSize);
+				var gridY = Math.floor(relY / _gridSize);
+
+				mouseFollower.x = currentGrid.x + (gridX * _gridSize);
+				mouseFollower.y = currentGrid.y + (gridY * _gridSize);
+
+				mouseFollower.visible = true;
+			}
+		}
+		else
+		{
+			mouseFollower.visible = false;
+		}
+	}
+
+	function noteLogic()
+	{
+		var mouse:FlxMouse = FlxG.mouse;
+
+		if (mouse.overlaps(enemyGrid) || mouse.overlaps(playerGrid))
+		{
+			if (mouse.justPressed)
+			{
+				addNote(mouseFollower.x, mouseFollower.y, 0);
+			}
+		}
+	}
+
+	function addNote(x:Float, y:Float, lane:Int)
+	{
+		var currentGrid:FlxSprite = null;
+		if (FlxG.mouse.overlaps(enemyGrid))
+			currentGrid = enemyGrid;
+		else if (FlxG.mouse.overlaps(playerGrid))
+			currentGrid = playerGrid;
+		else if (FlxG.mouse.overlaps(eventGrid))
+			currentGrid = eventGrid;
+
+		var note:Note = new Note(lane, getStrumFromY(y, currentGrid.y), Conductor.stepTime, _gridSize);
+		note.setPosition(x, y);
+		add(note);
 	}
 
 	function setupTopbar()
@@ -273,5 +346,13 @@ class ChartEditor extends FunkinState
 	function getYByStrum():Float
 	{
 		return (Conductor.time / Conductor.stepTime) * _gridSize;
+	}
+	function getStrumFromY(yPos:Float, ?offsetY:Float = 0):Float
+	{
+		var offsetY = yPos - offsetY;
+		var steps = offsetY / _gridSize;
+		var strumTime = steps * Conductor.stepTime;
+
+		return strumTime;
 	}
 }

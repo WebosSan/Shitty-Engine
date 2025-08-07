@@ -20,9 +20,9 @@ class Note extends FlxSprite
 	public var tail:FlxSprite;
 
 	public var duration:Float;
-	public var strum:Int;
+	public var strum:Float;
 
-	public function new(lane:Int, strum:Int, ?duration:Float = 0, ?targetSize:Int)
+	public function new(lane:Int, strum:Float, ?duration:Float = 0, ?targetSize:Int)
 	{
 		super();
 		this.strum = strum;

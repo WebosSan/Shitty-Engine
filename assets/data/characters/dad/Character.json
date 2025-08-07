@@ -1,0 +1,40 @@
+{
+    "renderType": "sparrow",
+	"position": {
+		"global": {"x": 0, "y": 0},
+		"camera": {"x": 0, "y": 0}
+	},
+	"healthBarColor": [175, 102, 206],
+	"animations": [
+		{
+            "offsets": {"x": 0, "y": 0},
+			"prefix": "Dad idle dance",
+			"name": "idle",
+			"framerate": 24
+		},
+		{
+            "offsets": {"x": 0, "y": -30},
+			"prefix": "Dad Sing Note DOWN",
+			"name": "singDOWN",
+			"framerate": 24
+		},
+		{
+            "offsets": {"x": 0, "y": 27},
+			"prefix": "Dad Sing Note RIGHT",
+			"name": "singRIGHT",
+			"framerate": 24
+		},
+		{
+            "offsets": {"x": -10, "y": 10},
+			"prefix": "Dad Sing Note LEFT",
+			"name": "singLEFT",
+			"framerate": 24
+		},
+		{
+            "offsets": {"x": -6, "y": 50},
+			"prefix": "Dad Sing Note UP",
+			"name": "singUP",
+			"framerate": 24
+		}
+	]
+}

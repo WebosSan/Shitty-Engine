@@ -1,0 +1,76 @@
+{
+    "renderType": "sparrow",
+    "position": {
+        "global": {"x": 0, "y": 0},
+        "camera": {"x": 0, "y": 0}
+    },
+    "healthBarColor": [165, 0, 77],
+    "animations": [
+        {
+            "offsets": {"x": -3, "y": -17},
+            "prefix": "GF FEAR",
+            "name": "scared",
+            "framerate": 24,
+            "loop": false
+        },
+        {
+            "offsets": {"x": 0, "y": -20},
+            "prefix": "GF Down Note",
+            "name": "singDOWN",
+            "framerate": 24,
+            "loop": false
+        },
+        {
+            "offsets": {"x": 0, "y": -9},
+            "prefix": "GF Dancing Beat",
+            "name": "danceRight",
+            "framerate": 24,
+            "loop": false,
+            "indices": [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+        },
+        {
+            "offsets": {"x": 0, "y": 4},
+            "prefix": "GF Up Note",
+            "name": "singUP",
+            "framerate": 24,
+            "loop": false
+        },
+        {
+            "offsets": {"x": 0, "y": -9},
+            "prefix": "GF Dancing Beat",
+            "name": "danceLeft",
+            "framerate": 24,
+            "loop": false,
+            "indices": [30, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        },
+        {
+            "offsets": {"x": 0, "y": 0},
+            "prefix": "GF Cheer",
+            "name": "cheer",
+            "framerate": 24,
+            "loop": false
+        },
+        {
+            "offsets": {"x": 0, "y": -20},
+            "prefix": "GF Right Note",
+            "name": "singRIGHT",
+            "framerate": 24,
+            "loop": false
+        },
+        {
+            "offsets": {"x": -2, "y": -21},
+            "prefix": "gf sad",
+            "name": "sad",
+            "framerate": 24,
+            "loop": false,
+            "indices": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        },
+        {
+            "offsets": {"x": 0, "y": -19},
+            "prefix": "GF left note",
+            "name": "singLEFT",
+            "framerate": 24,
+            "loop": false
+        }
+    ]
+}

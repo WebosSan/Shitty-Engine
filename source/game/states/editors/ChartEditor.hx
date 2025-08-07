@@ -3,10 +3,14 @@ package game.states.editors;
 import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxSprite;
+import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.math.FlxMath;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
+import game.data.PlayStateData;
+import game.data.SongData;
 import game.objects.character.CharacterIcon;
+import game.objects.notes.Note;
 import game.objects.ui.elements.Button;
 import game.objects.ui.elements.Dropdown;
 import game.objects.ui.elements.Slider;
@@ -44,11 +48,24 @@ class ChartEditor extends FunkinState
 	private var _defaultColor:FlxColor = 0xFF151619;
 	private var _bgColor:FlxColor = 0xFF1E1F22;
 
+	private var _song:SongData;
+	private var _currentDiff:DData;
+
 	private var _gridSize:Int = 40;
+
+	private var _notes:FlxTypedGroup<Note>;
+
+	public function new(p:PlayStateData)
+	{
+		super();
+		_song = new SongData(p.songToLoad);
+		_currentDiff = _song.getDifficulty(p.difficultyToLoad);
+	}
 
 	override function create()
 	{
 		super.create();
+		Settings.currentSpeed = 1;
 
 		Conductor.changeSong("assets/music/freakyMenu.ogg", 102);
 		FlxG.sound.music.pause();
@@ -94,6 +111,9 @@ class ChartEditor extends FunkinState
 		add(enemyGrid);
 		add(playerGrid);
 		add(eventGrid);
+
+		_notes = new FlxTypedGroup();
+		add(_notes);
 
 		enemyIcon = new CharacterIcon(enemyGrid.getGraphicMidpoint().x, enemyGrid.y, 'dad');
 		enemyIcon.scale.set(0.4, 0.4);

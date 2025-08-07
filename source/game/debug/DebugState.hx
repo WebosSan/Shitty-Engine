@@ -89,7 +89,10 @@ class DebugState extends FlxState
 				case "Character Test":
 					// Im doing this now, but first i need the Conductor Class
 				case "Charting State":
-					FlxG.switchState(ChartEditor.new);
+					FlxG.switchState(ChartEditor.new.bind({
+						songToLoad: "bopeebo",
+						difficultyToLoad: "normal"
+					}));
 				case "Test Playground":
 					FlxG.switchState(TestPlayground.new);
 				case "Ui Test":

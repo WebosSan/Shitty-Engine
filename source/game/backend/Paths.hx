@@ -4,6 +4,7 @@ import flixel.graphics.FlxGraphic;
 import flixel.graphics.frames.FlxAtlasFrames;
 import openfl.Assets;
 import openfl.filesystem.File;
+import openfl.filesystem.FileStream;
 
 class Paths
 {
@@ -34,6 +35,14 @@ class Paths
 	public static function sparrow(path:String, ?directory:String = "images"):FlxAtlasFrames
 	{
 		return FlxAtlasFrames.fromSparrow(image(path, directory), getText(path + ".xml", directory));
+	}
+
+	public static function save(path:String, content:Dynamic)
+	{
+		var file:FileStream = new FileStream();
+		file.open(new File(getPath(path)), WRITE);
+		file.writeUTF(Std.string(content));
+		file.close();
 	}
 
 	public static function getText(path:String, ?directory:String = "data"):String

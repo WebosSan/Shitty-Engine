@@ -94,9 +94,15 @@ class Game implements IEventListener
 			}
 
 			#if debug
-			targetState = ChartEditor;
+			targetState = ChartEditor.new.bind({
+				songToLoad: "bopeebo",
+				difficultyToLoad: "normal"
+			});
 			#else
-			targetState = ChartEditor;
+			targetState = ChartEditor.new.bind({
+				songToLoad: "bopeebo",
+				difficultyToLoad: "normal"
+			});
 			#end
 
 			if (game == null)

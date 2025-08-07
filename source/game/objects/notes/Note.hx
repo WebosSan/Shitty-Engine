@@ -55,25 +55,32 @@ class Note extends FlxSprite
 		body.update(elapsed);
 		tail.update(elapsed);
 
-		body.visible = Math.abs(duration) == 0;
-		body.scale.y = (duration / Conductor.stepTime) * Settings.currentSpeed;
-		body.updateHitbox();
-		body.setPosition(x + (width / 2 - body.width / 2), getGraphicMidpoint().y);
+		body.visible = duration > 0;
 
-		tail.setPosition(body.x, body.getGraphicBounds().bottom - 10);
+		if (duration > 0)
+		{
+			body.scale.y = (duration / Conductor.stepTime) * Settings.currentSpeed;
+			body.updateHitbox();
+			body.setPosition(x + (width / 2 - body.width / 2), y + height);
+
+			tail.setPosition(body.x, body.y + body.height);
+		}
 	}
 
 	override function draw()
 	{
-		tail.draw();
-		body.draw();
+		if (duration > 0)
+		{
+			tail.draw();
+			body.draw();
+		}
 		super.draw();
 	}
 
 	override function set_cameras(Value:Array<FlxCamera>):Array<FlxCamera>
 	{
-        body.cameras = Value;
-        tail.cameras = Value;
+		body.cameras = Value;
+		tail.cameras = Value;
 		return _cameras = Value;
 	}
 }

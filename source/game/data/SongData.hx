@@ -1,15 +1,38 @@
 package game.data;
 
 import json2object.JsonParser;
+import json2object.JsonWriter;
 
 class SongData {
     public var data:SData;
     public var difficulties:Array<DData>;
     public var name:String;
 
+	private var _parser:JsonParser<SData>;
+
+	private var _defaultData:SData = {
+		songName: "bopeebo",
+		difficulties: [
+			{
+				name: "normal",
+				metadata: {
+					speed: 2.0,
+					bpm: 100,
+					player: 'bf',
+					enemy: 'dad',
+					girlfriend: 'gf'
+				},
+				playerNotes: [],
+				enemyNotes: [],
+				events: []
+			}
+		]
+	};
+
     public function new(song:String) {
-        var parser:JsonParser<SData> = new JsonParser<SData>();
-        data = parser.fromJson(Paths.getText("Data.json", "data/songs/" + song));
+		_parser = new JsonParser<SData>();
+		data = Paths.exists(Paths.getPath('Data.json',
+			'data/songs/$song')) ? _parser.fromJson(Paths.getText("Data.json", "data/songs/" + song), song) : _defaultData;
         difficulties = data.difficulties;
         name = data.songName;
     }
@@ -17,7 +40,12 @@ class SongData {
     public function getDifficulty(name:String):DData {
         var data:Null<DData> = Lambda.find(difficulties, i -> i.name == name);
         return data ?? Lambda.find(difficulties, i -> i.name == "normal");
-    }
+	}
+	public function toString():String
+	{
+		var writter:JsonWriter<SData> = new JsonWriter<SData>();
+		return writter.write(data, "\n");
+	}
 }
 
 typedef SData = {
@@ -51,6 +79,11 @@ typedef DMetadata = {
     player:String,
     enemy:String,
     girlfriend:String,
+	?hasEnemyVocals:Bool,
+	?hasPlayerVocals:Bool,
+	?playerVocalsVolume:Float,
+	?enemyVocalsVolume:Float,
+	?instVolume:Float,
     ?songPrefix:String,
     ?songSuffix:String
 }

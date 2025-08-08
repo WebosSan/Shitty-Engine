@@ -7,6 +7,8 @@ import flixel.util.FlxSignal.FlxTypedSignal;
 
 class Conductor
 {
+	public static var offset:Float = 0;
+
 	public static var bpm(default, set):Float = 0;
 	public static var stepTime:Float = 0;
 	public static var beatTime:Float = 0;
@@ -43,6 +45,8 @@ class Conductor
 		if (FlxG.sound.music == null)
 			return;
 
+		__computeTime(dt);
+
 		_currentStep = time / stepTime;
 		_currentBeat = time / beatTime;
 
@@ -61,22 +65,6 @@ class Conductor
 
 		currentStep = Math.floor(_currentStep);
 		currentBeat = Math.floor(_currentBeat);
-	}
-
-	// it works i guess
-	public static function calculateTime()
-	{
-		var rawTime:Float = 0;
-
-		if (FlxG.sound.music != null)
-		{
-			rawTime = FlxG.sound.music.time;
-		}
-
-		if (FunkinGame.paused)
-			time = time;
-		else
-			time = time + (rawTime - time) * 0.1;
 	}
 
 	private static function set_bpm(value:Float):Float
@@ -101,5 +89,39 @@ class Conductor
 	public static function setTime(value:Float) {
 		FlxG.sound.music.time = FlxMath.bound(value, 0, length);
 		time = FlxMath.bound(value, 0, length);
+	}
+	public static var rawTime(get, never):Float;
+
+	public static function get_rawTime()
+		return FlxG.sound.music.time;
+
+	private static var __lastRawTime:Float = -1;
+	private static var __lastTime:Float = -1;
+
+	private static var __lastLatency:Float = -1;
+
+	// Using theodevelops time interpolation https://github.com/TheoDevelops/VSRG-Flixel/blob/main/source/vsrg/core/audio/Playback.hx#L101
+	private static function __computeTime(elapsed:Float)
+	{
+		if (FunkinGame.paused || !FlxG.sound.music.playing)
+		{
+			time = FlxG.sound.music.time;
+			return;
+		}
+
+		if (__lastRawTime != rawTime)
+		{
+			__lastLatency = rawTime - __lastRawTime;
+
+			time = rawTime + offset;
+		}
+		else
+		{
+			var latency = __lastRawTime - rawTime;
+			time += elapsed * 1000 * (20 / __lastLatency);
+		}
+
+		__lastRawTime = rawTime;
+		__lastTime = time;
 	}
 }

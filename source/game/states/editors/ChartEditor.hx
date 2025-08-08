@@ -6,6 +6,7 @@ import flixel.FlxSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.input.mouse.FlxMouse;
 import flixel.math.FlxMath;
+import flixel.sound.FlxSound;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
 import game.data.PlayStateData;
@@ -30,6 +31,7 @@ class ChartEditor extends FunkinState
 
 	private var songPosition:Slider;
 
+	private var downBar:FlxSprite;
 	private var pauseButton:Button;
 	private var advanceButton:Button;
 	private var rewindButton:Button;
@@ -46,6 +48,9 @@ class ChartEditor extends FunkinState
 	private var enemyIcon:CharacterIcon;
 	private var playerIcon:CharacterIcon;
 
+	private var enemyVocals:FlxSound;
+	private var playerVocals:FlxSound;
+
 	private var _defaultColor:FlxColor = 0xFF151619;
 	private var _bgColor:FlxColor = 0xFF1E1F22;
 
@@ -54,9 +59,12 @@ class ChartEditor extends FunkinState
 
 	private var _gridSize:Int = 40;
 
+	private var selectedNotes:Array<Note> = [];
 	private var _notes:FlxTypedGroup<Note>;
 
 	private var mouseFollower:FlxSprite;
+
+	private var _songPath:String;
 
 	public function new(p:PlayStateData)
 	{
@@ -70,8 +78,21 @@ class ChartEditor extends FunkinState
 		super.create();
 		Settings.currentSpeed = 1;
 
-		Conductor.changeSong("assets/music/freakyMenu.ogg", 102);
-		FlxG.sound.music.pause();
+		Conductor.changeSong(Paths.inst(_song.name, _currentDiff.metadata.songPrefix, _currentDiff.metadata.songSuffix), _currentDiff.metadata.bpm);
+
+		if (_currentDiff.metadata.hasEnemyVocals)
+		{
+			enemyVocals = FlxG.sound.play(Paths.vocals(_song.name, false, _currentDiff.metadata.songPrefix, _currentDiff.metadata.songSuffix), 1, true);
+			enemyVocals.pause();
+		}
+
+		if (_currentDiff.metadata.hasPlayerVocals)
+		{
+			playerVocals = FlxG.sound.play(Paths.vocals(_song.name, true, _currentDiff.metadata.songPrefix, _currentDiff.metadata.songSuffix), 1, true);
+			playerVocals.pause();
+		}
+
+		trace(_currentDiff.metadata.hasPlayerVocals, playerVocals, enemyVocals, FlxG.sound.music);
 
 		camHud = new FlxCamera();
 		camHud.bgColor.alpha = 0;
@@ -118,6 +139,8 @@ class ChartEditor extends FunkinState
 		_notes = new FlxTypedGroup();
 		add(_notes);
 
+		loadNotes();
+
 		enemyIcon = new CharacterIcon(enemyGrid.getGraphicMidpoint().x, enemyGrid.y, 'dad');
 		enemyIcon.scale.set(0.4, 0.4);
 		enemyIcon.updateHitbox();
@@ -150,10 +173,30 @@ class ChartEditor extends FunkinState
 		super.update(elapsed);
 
 		if (FlxG.keys.justPressed.SPACE)
+		{
+			if (enemyVocals != null)
+				FlxG.sound.music.playing ? enemyVocals.pause() : enemyVocals.play();
+
+			if (playerVocals != null)
+				FlxG.sound.music.playing ? playerVocals.pause() : playerVocals.play();
 			FlxG.sound.music.playing ? FlxG.sound.music.pause() : FlxG.sound.music.play();
 
+			if (enemyVocals != null)
+				enemyVocals.time = Conductor.time;
+
+			if (playerVocals != null)
+				playerVocals.time = Conductor.time;
+		}
+
 		if (FlxG.mouse.wheel != 0)
+		{
 			Conductor.setTime(Conductor.time - (FlxG.mouse.wheel * Conductor.stepTime));
+			if (enemyVocals != null)
+				enemyVocals.time = Conductor.time;
+
+			if (playerVocals != null)
+				playerVocals.time = Conductor.time;
+		}
 
 		strumLine.y = playerGrid.y + getYByStrum();
 
@@ -204,28 +247,129 @@ class ChartEditor extends FunkinState
 	{
 		var mouse:FlxMouse = FlxG.mouse;
 
-		if (mouse.overlaps(enemyGrid) || mouse.overlaps(playerGrid))
+		if ((mouse.overlaps(enemyGrid) || mouse.overlaps(playerGrid))
+			&& !downBar.overlapsPoint(FlxG.mouse.getWorldPosition(camHud))
+			&& !topBar.overlapsPoint(FlxG.mouse.getWorldPosition(camHud)))
 		{
 			if (mouse.justPressed)
 			{
-				addNote(mouseFollower.x, mouseFollower.y, 0);
+				var possibleNotes:Array<Note> = _notes.members.filter(f -> mouseFollower.overlaps(f));
+
+				trace(possibleNotes);
+
+				if (possibleNotes.length <= 0)
+				{
+					addNote(mouseFollower.x, mouseFollower.y);
+				}
+				else
+				{
+					selectedNotes = possibleNotes;
+				}
+			}
+			else if (mouse.justPressedRight)
+			{
+				removeNote();
+			}
+		}
+
+		for (n in selectedNotes)
+		{
+			n.color = FlxColor.BLUE;
+		}
+
+		if (FlxG.keys.justPressed.Q)
+		{
+			for (n in selectedNotes)
+			{
+				changeSustain(n, -Conductor.stepTime);
+			}
+		}
+		else if (FlxG.keys.justPressed.E)
+		{
+			for (n in selectedNotes)
+			{
+				changeSustain(n, Conductor.stepTime);
 			}
 		}
 	}
 
-	function addNote(x:Float, y:Float, lane:Int)
+	function changeSustain(n:Note, dur:Float)
+	{
+		n.duration += dur;
+		var note:NData = Lambda.find(_currentDiff.enemyNotes, nd -> nd.time == n.strum) ?? Lambda.find(_currentDiff.playerNotes, nd -> nd.time == n.strum);
+		note.duration = n.duration;
+	}
+
+	function removeNote()
+	{
+		var possibleNotes:Array<Note> = _notes.members.filter(f -> mouseFollower.overlaps(f));
+		for (n in possibleNotes)
+		{
+			var note:NData = Lambda.find(_currentDiff.enemyNotes, nd -> nd.time == n.strum) ?? Lambda.find(_currentDiff.playerNotes, nd -> nd.time == n.strum);
+
+			if (_currentDiff.enemyNotes.contains(note))
+				_currentDiff.enemyNotes.remove(note);
+			if (_currentDiff.playerNotes.contains(note))
+				_currentDiff.playerNotes.remove(note);
+
+			_notes.members.remove(n);
+			n.destroy();
+		}
+	}
+
+	function addNote(x:Float, y:Float):Note
 	{
 		var currentGrid:FlxSprite = null;
+		var isEnemy:Bool = false;
+
 		if (FlxG.mouse.overlaps(enemyGrid))
+		{
 			currentGrid = enemyGrid;
+			isEnemy = true;
+		}
 		else if (FlxG.mouse.overlaps(playerGrid))
+		{
 			currentGrid = playerGrid;
-		else if (FlxG.mouse.overlaps(eventGrid))
-			currentGrid = eventGrid;
+			isEnemy = false;
+		}
+		else
+		{
+			return null;
+		}
+
+		var relX = x - currentGrid.x;
+		var lane:Int = Math.floor(relX / _gridSize);
+
+		var maxLanes = isEnemy ? 4 : 4;
+		lane = Std.int(FlxMath.bound(lane, 0, maxLanes - 1));
 
 		var note:Note = new Note(lane, getStrumFromY(y, currentGrid.y), 0, _gridSize);
 		note.setPosition(x, y);
-		add(note);
+		_notes.add(note);
+		var notesArray:Array<NData> = isEnemy ? _currentDiff.enemyNotes : _currentDiff.playerNotes;
+		notesArray.push({
+			time: note.strum,
+			lane: note.lane,
+			duration: 0
+		});
+		return note;
+	}
+
+	function loadNotes()
+	{
+		for (note in _currentDiff.enemyNotes)
+		{
+			var n:Note = new Note(note.lane, note.time, note.duration, _gridSize);
+			n.setPosition(enemyGrid.x + (_gridSize * note.lane), enemyGrid.y + getYByStrum(note.time));
+			_notes.add(n);
+		}
+
+		for (note in _currentDiff.playerNotes)
+		{
+			var n:Note = new Note(note.lane, note.time, note.duration, _gridSize);
+			n.setPosition(playerGrid.x + (_gridSize * note.lane), playerGrid.y + getYByStrum(note.time));
+			_notes.add(n);
+		}
 	}
 
 	function setupTopbar()
@@ -249,17 +393,22 @@ class ChartEditor extends FunkinState
 
 	function setupDownBar()
 	{
-		var bg:FlxSprite = new FlxSprite(0, 0);
-		bg.makeGraphic(FlxG.width, 60, _bgColor);
-		bg.y = FlxG.height - 60;
-		bg.cameras = [camHud];
-		add(bg);
+		downBar = new FlxSprite(0, 0);
+		downBar.makeGraphic(FlxG.width, 60, _bgColor);
+		downBar.y = FlxG.height - 60;
+		downBar.cameras = [camHud];
+		add(downBar);
 
 		songPosition = new Slider(0, FlxG.height - 50, FlxG.width, 10, _defaultColor);
 		songPosition.cameras = [camHud];
 		songPosition.onValueChanged = v ->
 		{
 			Conductor.setTime(Conductor.length * v);
+			if (enemyVocals != null)
+				enemyVocals.time = Conductor.time;
+
+			if (playerVocals != null)
+				playerVocals.time = Conductor.time;
 		}
 		add(songPosition);
 
@@ -268,7 +417,17 @@ class ChartEditor extends FunkinState
 		pauseButton.cameras = [camHud];
 		pauseButton.onClick = () ->
 		{
+			if (enemyVocals != null)
+				FlxG.sound.music.playing ? enemyVocals.pause() : enemyVocals.play();
+
+			if (playerVocals != null)
+				FlxG.sound.music.playing ? playerVocals.pause() : playerVocals.play();
 			FlxG.sound.music.playing ? FlxG.sound.music.pause() : FlxG.sound.music.play();
+			if (enemyVocals != null)
+				enemyVocals.time = Conductor.time;
+
+			if (playerVocals != null)
+				playerVocals.time = Conductor.time;
 		}
 		add(pauseButton);
 
@@ -277,6 +436,11 @@ class ChartEditor extends FunkinState
 		advanceButton.onClick = () ->
 		{
 			Conductor.setTime(Conductor.time + Conductor.beatTime);
+			if (enemyVocals != null)
+				enemyVocals.time = Conductor.time;
+
+			if (playerVocals != null)
+				playerVocals.time = Conductor.time;
 		}
 		add(advanceButton);
 
@@ -285,6 +449,11 @@ class ChartEditor extends FunkinState
 		rewindButton.onClick = () ->
 		{
 			Conductor.setTime(Conductor.time - Conductor.beatTime);
+			if (enemyVocals != null)
+				enemyVocals.time = Conductor.time;
+
+			if (playerVocals != null)
+				playerVocals.time = Conductor.time;
 		}
 		add(rewindButton);
 
@@ -292,8 +461,18 @@ class ChartEditor extends FunkinState
 		startButton.cameras = [camHud];
 		startButton.onClick = () ->
 		{
+			if (enemyVocals != null)
+				FlxG.sound.music.playing ? enemyVocals.pause() : enemyVocals.play();
+
+			if (playerVocals != null)
+				FlxG.sound.music.playing ? playerVocals.pause() : playerVocals.play();
 			FlxG.sound.music.pause();
 			Conductor.setTime(0);
+			if (enemyVocals != null)
+				enemyVocals.time = Conductor.time;
+
+			if (playerVocals != null)
+				playerVocals.time = Conductor.time;
 		}
 		add(startButton);
 
@@ -302,7 +481,17 @@ class ChartEditor extends FunkinState
 		endButton.onClick = () ->
 		{
 			FlxG.sound.music.pause();
+			if (enemyVocals != null)
+				FlxG.sound.music.playing ? enemyVocals.pause() : enemyVocals.play();
+
+			if (playerVocals != null)
+				FlxG.sound.music.playing ? playerVocals.pause() : playerVocals.play();
 			Conductor.setTime(Conductor.length - Conductor.beatTime);
+			if (enemyVocals != null)
+				enemyVocals.time = Conductor.time;
+
+			if (playerVocals != null)
+				playerVocals.time = Conductor.time;
 		}
 		add(endButton);
 
@@ -313,7 +502,14 @@ class ChartEditor extends FunkinState
 		add(infoText);
 	}
 
-	function fileCommands(b:Button, t:String, id:Int) {}
+	function fileCommands(b:Button, t:String, id:Int)
+	{
+		switch (id)
+		{
+			case 2:
+				Paths.save('data/songs/${_song.name}/Data.json', _song);
+		}
+	}
 
 	function editCommands(b:Button, t:String, id:Int) {}
 
@@ -343,10 +539,12 @@ class ChartEditor extends FunkinState
 		return bmp;
 	}
 
-	function getYByStrum():Float
+	function getYByStrum(?strum:Float):Float
 	{
-		return (Conductor.time / Conductor.stepTime) * _gridSize;
+		strum = strum ?? Conductor.time;
+		return (strum / Conductor.stepTime) * _gridSize;
 	}
+
 	function getStrumFromY(yPos:Float, ?offsetY:Float = 0):Float
 	{
 		var offsetY = yPos - offsetY;

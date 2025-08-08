@@ -13,10 +13,6 @@ class FunkinGame extends FlxGame
 	override function create(_:Event)
 	{
 		super.create(_);
-		timeTimer = new Timer(10);
-		timeTimer.run = Conductor.calculateTime;
-		timeTimer.run();
-
 		FlxG.signals.focusGained.add(() -> paused = false);
 		FlxG.signals.focusLost.add(() -> paused = true);
 	}

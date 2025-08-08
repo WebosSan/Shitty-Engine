@@ -5,13 +5,41 @@ import flixel.graphics.frames.FlxAtlasFrames;
 import openfl.Assets;
 import openfl.filesystem.File;
 import openfl.filesystem.FileStream;
+import openfl.media.Sound;
 
 class Paths
 {
 	public static var cacheImages:Map<String, FlxGraphic> = new Map();
 
-	public static function font(path:String, ?directory:String = "fonts") {
-		return getPath(path + '.ttf', directory);	
+	public static function vocals(id:String, ?isPlayer:Bool = true, ?prefix:String = "", ?sufix:String = "")
+	{
+		return sound('$id/${prefix}Vocals-${(isPlayer ? "player" : "enemy")}${sufix}', 'songs');
+	}
+
+	public static function inst(id:String, ?prefix:String = "", ?sufix:String = "")
+	{
+		return sound('$id/${prefix}Inst${sufix}', 'songs');
+	}
+
+	public static function music(path:String)
+	{
+		return sound(path, 'music');
+	}
+
+	public static function sound(path:String, ?directory:String = 'sounds')
+	{
+		var p:String = getPath(path + '.ogg', directory);
+		trace(p);
+		if (exists(p))
+		{
+			return Sound.fromFile(p);
+		}
+		return null;
+	}
+
+	public static function font(path:String, ?directory:String = "fonts")
+	{
+		return getPath(path + '.ttf', directory);
 	}
 
 	public static function image(path:String, ?directory:String = "images"):FlxGraphic

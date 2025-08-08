@@ -20,7 +20,9 @@ class SongData {
 					bpm: 100,
 					player: 'bf',
 					enemy: 'dad',
-					girlfriend: 'gf'
+					girlfriend: 'gf',
+					hasPlayerVocals: true,
+					hasEnemyVocals: true
 				},
 				playerNotes: [],
 				enemyNotes: [],
@@ -44,7 +46,8 @@ class SongData {
 	public function toString():String
 	{
 		var writter:JsonWriter<SData> = new JsonWriter<SData>();
-		return writter.write(data, "\n");
+		var str:String = writter.write(data);
+		return str.substr(writter.write(data).indexOf("{"));
 	}
 }
 

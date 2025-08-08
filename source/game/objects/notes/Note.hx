@@ -19,6 +19,7 @@ class Note extends FlxSprite
 	public var body:FlxSprite;
 	public var tail:FlxSprite;
 
+	public var lane:Int;
 	public var duration:Float;
 	public var strum:Float;
 
@@ -32,6 +33,7 @@ class Note extends FlxSprite
 
 		this.strum = strum;
 		this.duration = duration;
+		this.lane = lane;
 		_ogDuration = this.duration;
 		
 		frames = Paths.sparrow('ui/notes/NOTE_assets');
@@ -67,7 +69,7 @@ class Note extends FlxSprite
 
 		if (duration > 0)
 		{
-			body.setGraphicSize(body.width, _targetSize * (duration / _ogDuration) * Settings.currentSpeed);
+			body.setGraphicSize(body.width, _targetSize * (duration / Conductor.stepTime) * Settings.currentSpeed);
 			body.updateHitbox();
 			body.setPosition(x + (width / 2 - body.width / 2), y + height);
 

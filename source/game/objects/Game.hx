@@ -4,6 +4,8 @@ import flixel.FlxG;
 import flixel.util.typeLimit.NextState.InitialState;
 import game.backend.FunkinGame;
 import game.backend.Settings;
+import game.backend.converters.OsuManiaConverter;
+import game.data.SongData;
 import game.debug.DebugState;
 import game.objects.script.ScriptedGame;
 import game.objects.ui.Memory;
@@ -93,15 +95,19 @@ class Game implements IEventListener
 				FlxG.resetGame();
 			}
 
+			var osu:SongData = OsuManiaConverter.parse(Paths.getText("xi - FREEDOM DiVE (razlteh) [4K Hyper].osu", 'data/test'));
+
 			#if debug
 			targetState = ChartEditor.new.bind({
 				songToLoad: "bopeebo",
-				difficultyToLoad: "normal"
+				difficultyToLoad: "normal",
+				data: osu
 			});
 			#else
 			targetState = ChartEditor.new.bind({
 				songToLoad: "bopeebo",
-				difficultyToLoad: "normal"
+				difficultyToLoad: "normal",
+				data: osu
 			});
 			#end
 

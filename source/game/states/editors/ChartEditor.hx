@@ -20,6 +20,7 @@ import game.objects.ui.elements.TopBar;
 import game.states.base.FunkinState;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
+import openfl.utils.Object;
 
 class ChartEditor extends FunkinState
 {
@@ -60,7 +61,7 @@ class ChartEditor extends FunkinState
 	private var _gridSize:Int = 40;
 
 	private var selectedNotes:Array<Note> = [];
-	private var _notes:FlxTypedGroup<Note>;
+	private var _notes:NotesGroup;
 
 	private var mouseFollower:FlxSprite;
 
@@ -69,8 +70,16 @@ class ChartEditor extends FunkinState
 	public function new(p:PlayStateData)
 	{
 		super();
-		_song = new SongData(p.songToLoad);
-		_currentDiff = _song.getDifficulty(p.difficultyToLoad);
+		if (p.data == null)
+		{
+			_song = new SongData(p.songToLoad);
+			_currentDiff = _song.getDifficulty(p.difficultyToLoad);
+		}
+		else
+		{
+			_song = p.data;
+			_currentDiff = _song.getDifficulty(p.difficultyToLoad);
+		}
 	}
 
 	override function create()
@@ -136,7 +145,7 @@ class ChartEditor extends FunkinState
 		add(playerGrid);
 		add(eventGrid);
 
-		_notes = new FlxTypedGroup();
+		_notes = new NotesGroup();
 		add(_notes);
 
 		loadNotes();
@@ -319,56 +328,53 @@ class ChartEditor extends FunkinState
 
 	function addNote(x:Float, y:Float):Note
 	{
-		var currentGrid:FlxSprite = null;
-		var isEnemy:Bool = false;
-
-		if (FlxG.mouse.overlaps(enemyGrid))
-		{
-			currentGrid = enemyGrid;
-			isEnemy = true;
-		}
-		else if (FlxG.mouse.overlaps(playerGrid))
-		{
-			currentGrid = playerGrid;
-			isEnemy = false;
-		}
-		else
-		{
+		final grid = getGridFromMouse();
+		if (grid == null)
 			return null;
-		}
 
-		var relX = x - currentGrid.x;
-		var lane:Int = Math.floor(relX / _gridSize);
+		final isEnemy = (grid == enemyGrid);
+		final lane = getLaneFromPosition(x, grid.x);
+		final strum = getStrumFromY(y, grid.y);
 
-		var maxLanes = isEnemy ? 4 : 4;
-		lane = Std.int(FlxMath.bound(lane, 0, maxLanes - 1));
-
-		var note:Note = new Note(lane, getStrumFromY(y, currentGrid.y), 0, _gridSize);
-		note.setPosition(x, y);
+		final note = createNote(grid, lane, strum, 0);
 		_notes.add(note);
-		var notesArray:Array<NData> = isEnemy ? _currentDiff.enemyNotes : _currentDiff.playerNotes;
-		notesArray.push({
-			time: note.strum,
-			lane: note.lane,
-			duration: 0
-		});
+
+		final notesArray = isEnemy ? _currentDiff.enemyNotes : _currentDiff.playerNotes;
+		notesArray.push({time: strum, lane: lane, duration: 0});
+
 		return note;
 	}
 
 	function loadNotes()
 	{
-		for (note in _currentDiff.enemyNotes)
-		{
-			var n:Note = new Note(note.lane, note.time, note.duration, _gridSize);
-			n.setPosition(enemyGrid.x + (_gridSize * note.lane), enemyGrid.y + getYByStrum(note.time));
-			_notes.add(n);
-		}
+		loadNotesFromArray(_currentDiff.enemyNotes, enemyGrid);
+		loadNotesFromArray(_currentDiff.playerNotes, playerGrid);
+	}
 
-		for (note in _currentDiff.playerNotes)
+	private function getGridFromMouse():FlxSprite
+	{
+		return if (FlxG.mouse.overlaps(enemyGrid)) enemyGrid; else if (FlxG.mouse.overlaps(playerGrid)) playerGrid; else null;
+	}
+
+	private function getLaneFromPosition(x:Float, gridX:Float):Int
+	{
+		final relX = x - gridX;
+		final lane = Math.floor(relX / _gridSize);
+		return Std.int(FlxMath.bound(lane, 0, 3));
+	}
+
+	private function createNote(grid:FlxSprite, lane:Int, strum:Float, duration:Float):Note
+	{
+		final note = _notes.recycle(Note.new.bind(lane, strum, duration, _gridSize));
+		note.setPosition(grid.x + (lane * _gridSize), grid.y + getYByStrum(strum));
+		return note;
+	}
+
+	private function loadNotesFromArray(notesData:Array<NData>, grid:FlxSprite)
+	{
+		for (note in notesData)
 		{
-			var n:Note = new Note(note.lane, note.time, note.duration, _gridSize);
-			n.setPosition(playerGrid.x + (_gridSize * note.lane), playerGrid.y + getYByStrum(note.time));
-			_notes.add(n);
+			_notes.add(createNote(grid, note.lane, note.time, note.duration));
 		}
 	}
 
@@ -552,5 +558,43 @@ class ChartEditor extends FunkinState
 		var strumTime = steps * Conductor.stepTime;
 
 		return strumTime;
+	}
+}
+
+class NotesGroup extends FlxTypedGroup<Note>
+{
+	public function new()
+	{
+		super();
+	}
+
+	override function update(elapsed:Float)
+	{
+		for (basic in members)
+		{
+			if (basic != null && basic.exists && basic.active && basic.isOnScreen())
+			{
+				basic.update(elapsed);
+			}
+		}
+	}
+
+	override function draw()
+	{
+		@:privateAccess
+		final oldDefaultCameras = FlxCamera._defaultCameras;
+		if (_cameras != null)
+		{
+			@:privateAccess
+			FlxCamera._defaultCameras = _cameras;
+		}
+
+		for (basic in members)
+		{
+			if (basic != null && basic.exists && basic.visible && basic.isOnScreen())
+				basic.draw();
+		}
+		@:privateAccess
+		FlxCamera._defaultCameras = oldDefaultCameras;
 	}
 }

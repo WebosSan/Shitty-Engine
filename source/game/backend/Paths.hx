@@ -30,6 +30,7 @@ class Paths
 	{
 		var p:String = getPath(path + '.ogg', directory);
 		trace(p);
+		trace(p);
 		if (exists(p))
 		{
 			return Sound.fromFile(p);

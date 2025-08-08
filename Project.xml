@@ -44,6 +44,7 @@
 	<haxelib name="flixel" />
 	<haxelib name="json2object" />
 	<haxelib name="rulescript" />
+	<haxelib name="moonchart" />
 
 	<!--In
 	case you want to use the addons package-->

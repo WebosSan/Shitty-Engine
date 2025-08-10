@@ -34,8 +34,9 @@ class Strum extends FlxSprite
 		this.animation.addByPrefix("press", laneAnimations[1]);
 		this.animation.addByPrefix("confirm", laneAnimations[2]);
 
-		_targetSize = (targetSize == null ? Std.int(width * 0.5) : targetSize);
+		_targetSize = (targetSize == null ? Std.int(width * 0.7) : targetSize);
         setGraphicSize(Std.int(_targetSize));
+		updateHitbox();
 
 		this.animation.play("static");
 

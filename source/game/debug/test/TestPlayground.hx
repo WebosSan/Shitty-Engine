@@ -9,7 +9,6 @@ import game.backend.Conductor;
 import game.objects.character.Character;
 import game.objects.character.ScriptedCharacter;
 import game.objects.notes.Note;
-import game.objects.notes.NotesBuffer;
 import game.objects.notes.StrumLine;
 import game.states.base.FunkinState;
 
@@ -18,8 +17,7 @@ class TestPlayground extends FunkinState {
     var bf:ScriptedCharacter;
     var gf:ScriptedCharacter;
 
-    var camHud:FlxCamera;
-    var notes:NotesBuffer;
+	var camHud:FlxCamera;
     
     var cpuStrum:StrumLine = new StrumLine();
     var playerStrum:StrumLine = new StrumLine();
@@ -48,23 +46,22 @@ class TestPlayground extends FunkinState {
         bf.y = (dad.y + dad.height) - bf.height;
         add(bf);
 
-        notes = new NotesBuffer();
-        notes.cameras = [camHud];
-        add(notes);
+		createStrums();
 
-        for (i in 0...4) {
-            notes.createNote(i, 1000, Conductor.stepTime * 10);
-        }
+		FlxG.camera.zoom = 0.6;
+	}
 
+	function createStrums()
+	{
         cpuStrum = new StrumLine(0, 0);
         cpuStrum.cameras = [camHud];
+		cpuStrum.x = FlxG.width / 4 - cpuStrum.width / 2;
         add(cpuStrum);
 
         playerStrum = new StrumLine(0, 0);
         playerStrum.cameras = [camHud];
-        add(playerStrum);
-
-        FlxG.camera.zoom = 0.6;
+		playerStrum.x = (FlxG.width / 4 + FlxG.width / 2) - cpuStrum.width / 2;
+		add(playerStrum);
     }
 
     override function update(elapsed:Float) {
@@ -80,8 +77,6 @@ class TestPlayground extends FunkinState {
 
         if (FlxG.keys.justPressed.LEFT) bf.playAnimation('singLEFT');
         else if (FlxG.keys.justPressed.RIGHT) bf.playAnimation('singRIGHT');
-
-        if (FlxG.keys.pressed.SPACE) notes.forEachAlive(n -> n.duration -= Conductor.stepTime * elapsed);
 
         if (FlxG.keys.pressed.ESCAPE) FlxG.switchState(DebugState.new);
     }

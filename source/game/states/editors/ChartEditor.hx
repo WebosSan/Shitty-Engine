@@ -18,6 +18,7 @@ import game.objects.ui.elements.Dropdown;
 import game.objects.ui.elements.Slider;
 import game.objects.ui.elements.TopBar;
 import game.states.base.FunkinState;
+import game.substates.TestSubstate;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 import openfl.utils.Object;
@@ -528,6 +529,11 @@ class ChartEditor extends FunkinState
 		else if (id == 1)
 		{
 			editDropdown.grouped = !editDropdown.grouped;
+		}
+		else if (id == 2) {}
+		else if (id == 3)
+		{
+			openSubState(new TestSubstate(_song, _currentDiff));
 		}
 	}
 

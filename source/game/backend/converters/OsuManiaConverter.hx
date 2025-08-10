@@ -40,7 +40,7 @@ class OsuManiaConverter {
             diff.playerNotes.push({
                 lane: note.lane,
                 time: note.time,
-                duration: note.length
+				duration: note.length / 0.65
             });
         }
 

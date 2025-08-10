@@ -3,10 +3,15 @@ package game.states.base;
 import flixel.FlxSubState;
 import game.backend.Conductor;
 
-class FunkinState extends FlxSubState
+class FunkinSubState extends FlxSubState
 {
 	private var currentStep:Int = 0;
 	private var currentBeat:Int = 0;
+
+	public function new()
+	{
+		super();
+	}
 
 	override function create()
 	{

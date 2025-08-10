@@ -26,6 +26,14 @@ class StrumLine extends FlxTypedSpriteGroup<Strum>
 		generateStrums();
 	}
 
+	override function get_width():Float
+	{
+		if (length == 0)
+			return 0;
+
+		return (right.x + right.width) - left.x;
+	}
+
 	function generateStrums()
 	{
 		for (i in 0...4)
@@ -34,7 +42,7 @@ class StrumLine extends FlxTypedSpriteGroup<Strum>
 			@:privateAccess
 			strum.x = strum._targetSize * i + (spacing * (i == 0 ? 0 : 1));
 			this.add(strum);
-			
+
 			switch (i)
 			{
 				case 0:

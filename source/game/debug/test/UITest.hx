@@ -7,6 +7,7 @@ import game.objects.ui.elements.Button;
 import game.objects.ui.elements.ColorPicker;
 import game.objects.ui.elements.Dropdown;
 import game.objects.ui.elements.Modal;
+import game.objects.ui.elements.Number;
 import game.objects.ui.elements.Slider;
 import game.objects.ui.elements.Switch;
 import game.objects.ui.elements.TopBar;
@@ -64,12 +65,16 @@ class UITest extends FunkinState
 		slider.y = 40 + modalText.height + 10;
 
 		var sliderText:FlxText = new FlxText(10, slider.y + 20, 380, "Slider Value: " + slider.value, 12);
+		sliderText.font = Paths.font('GoogleSansCode-VariableFont_wght');
+		sliderText.updateHitbox();
 
 		slider.onValueChanged = (v:Float) ->
 		{
 			sliderText.text = 'Slider Value: $v';
 			return;
 		}
+
+		modal.add(new Number(sliderText.x, sliderText.y + sliderText.height, 50, 25, 0xFF473356, 2, 0.1));
 
 		modal.add(slider);
 

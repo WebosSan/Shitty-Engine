@@ -15,6 +15,7 @@ import game.objects.character.CharacterIcon;
 import game.objects.notes.Note;
 import game.objects.ui.elements.Button;
 import game.objects.ui.elements.Dropdown;
+import game.objects.ui.elements.Modal;
 import game.objects.ui.elements.Slider;
 import game.objects.ui.elements.TopBar;
 import game.states.base.FunkinState;
@@ -30,6 +31,8 @@ class ChartEditor extends FunkinState
 
 	private var fileDropdown:Dropdown;
 	private var editDropdown:Dropdown;
+
+	private var metadataModal:Modal;
 
 	private var songPosition:Slider;
 
@@ -256,10 +259,12 @@ class ChartEditor extends FunkinState
 	function noteLogic()
 	{
 		var mouse:FlxMouse = FlxG.mouse;
+		var modalShit:Bool = metadataModal.visible && mouse.overlaps(metadataModal, camHud);
 
 		if ((mouse.overlaps(enemyGrid) || mouse.overlaps(playerGrid))
 			&& !downBar.overlapsPoint(FlxG.mouse.getWorldPosition(camHud))
-			&& !topBar.overlapsPoint(FlxG.mouse.getWorldPosition(camHud)))
+			&& !topBar.overlapsPoint(FlxG.mouse.getWorldPosition(camHud))
+			&& !modalShit)
 		{
 			if (mouse.justPressed)
 			{
@@ -396,6 +401,11 @@ class ChartEditor extends FunkinState
 		topBar.onClick = topBarCommands;
 		topBar.cameras = [camHud];
 		add(topBar);
+		metadataModal = new Modal(0, 0, 500, 400, _defaultColor, "Metadata");
+		metadataModal.screenCenter();
+		metadataModal.visible = false;
+		metadataModal.cameras = [camHud];
+		add(metadataModal);
 	}
 
 	function setupDownBar()
@@ -530,7 +540,10 @@ class ChartEditor extends FunkinState
 		{
 			editDropdown.grouped = !editDropdown.grouped;
 		}
-		else if (id == 2) {}
+		else if (id == 2)
+		{
+			metadataModal.visible = !metadataModal.visible;
+		}
 		else if (id == 3)
 		{
 			openSubState(new TestSubstate(_song, _currentDiff));
